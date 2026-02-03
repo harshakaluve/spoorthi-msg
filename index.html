@@ -33,7 +33,7 @@
         .scratch-container {
             position: relative;
             width: 300px;
-            height: 420px; /* Slightly taller for the message */
+            height: 460px; /* Taller to fit buttons */
             margin: 0 auto;
             border-radius: 20px;
             overflow: hidden;
@@ -52,55 +52,79 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 25px;
+            padding: 20px;
             box-sizing: border-box;
             z-index: 1; 
         }
 
         .base-content img { 
-            width: 140px; 
-            margin-bottom: 20px; 
+            width: 130px; 
+            margin-bottom: 15px; 
             border-radius: 10px;
         }
 
         .base-content h2 {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             color: #333;
             margin: 0 0 10px 0;
         }
 
-        .base-content p {
-            color: #666;
-            font-size: 1rem;
+        .message-text {
+            color: #555;
+            font-size: 0.95rem;
             line-height: 1.5;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .question {
+            font-weight: bold;
+            color: #d6336c;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            position: relative;
+            width: 100%;
+            justify-content: center;
+            height: 50px; /* Fixed height for button area */
+        }
+
+        button {
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.2s;
+        }
+
+        .yes-button {
+            background: #fa0561;
+            color: white;
+            box-shadow: 0 4px 15px rgba(250, 5, 97, 0.3);
+            z-index: 10;
+        }
+
+        .no-button {
+            background: #e0e0e0;
+            color: #555;
+            position: absolute; /* Allows it to move freely */
+            transition: all 0.2s ease; /* Smooth movement */
         }
 
         canvas {
             position: absolute;
             top: 0;
             left: 0;
-            z-index: 2; 
+            z-index: 20; 
             cursor: pointer;
             touch-action: none; 
             transition: opacity 0.8s ease;
-        }
-
-        .yes-button {
-            padding: 12px 35px;
-            background: #fa0561;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(250, 5, 97, 0.3);
-            transition: transform 0.2s, background 0.3s;
-        }
-
-        .yes-button:active {
-            transform: scale(0.95);
         }
         
         .reveal-animation {
@@ -122,11 +146,18 @@
             <div class="base-content">
                 <img src="https://media.tenor.com/F3-c5qA5dJAAAAAj/bear-sorry.gif" alt="Sorry Bear">
                 
-                <h2>I'm really sorry.</h2>
+                <h2>I'm so sorry.</h2>
                 
-                <p>I hate that I upset you. You mean the world to me and I never want to hurt you.</p>
+                <p class="message-text">
+                    I hate that I upset you. You are the most important person in my life, and hurting you is the last thing I ever want to do.
+                </p>
+
+                <p class="question">Will you forgive me?</p>
                 
-                <button class="yes-button" onclick="celebrate()">I Forgive You</button>
+                <div class="buttons">
+                    <button class="yes-button" onclick="celebrate()">Yes</button>
+                    <button class="no-button" id="noBtn" style="right: 40px;">No</button>
+                </div>
             </div>
 
             <canvas id="scratch-canvas"></canvas>
@@ -134,6 +165,7 @@
     </div>
 
     <script>
+        /* --- SCRATCH LOGIC --- */
         const canvas = document.getElementById('scratch-canvas');
         const ctx = canvas.getContext('2d');
         const container = document.querySelector('.scratch-container');
@@ -141,14 +173,12 @@
         canvas.width = container.offsetWidth;
         canvas.height = container.offsetHeight;
 
-        // 1. Create the Scratch Cover (Silver)
         const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
         gradient.addColorStop(0, '#e8e8e8');
         gradient.addColorStop(1, '#c0c0c0');
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Add instructions text
         ctx.fillStyle = "#777";
         ctx.font = "bold 18px sans-serif";
         ctx.textAlign = "center";
@@ -160,43 +190,31 @@
             const rect = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return {
-                x: clientX - rect.left,
-                y: clientY - rect.top
-            };
+            return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
         function scratch(e) {
             if (!isDrawing) return;
             e.preventDefault(); 
-
             const pos = getPosition(e);
-
             ctx.globalCompositeOperation = 'destination-out';
             ctx.beginPath();
             ctx.arc(pos.x, pos.y, 25, 0, Math.PI * 2);
             ctx.fill(); 
-            
             checkScratchCompletion();
         }
 
         let revealed = false;
         function checkScratchCompletion() {
             if(revealed) return;
-            // Optimize: only check occasionally
-            if(Math.random() > 0.15) return;
-
+            if(Math.random() > 0.15) return; // Throttling
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const pixels = imageData.data;
             let transparentPixels = 0;
-
             for (let i = 3; i < pixels.length; i += 4) {
                 if (pixels[i] === 0) transparentPixels++;
             }
-
-            const percentage = (transparentPixels / (pixels.length / 4)) * 100;
-
-            if (percentage > 40) {
+            if ((transparentPixels / (pixels.length / 4)) * 100 > 40) {
                 revealed = true;
                 canvas.style.opacity = 0; 
                 setTimeout(() => {
@@ -208,26 +226,12 @@
 
         canvas.addEventListener('mousedown', (e) => { isDrawing = true; scratch(e); });
         canvas.addEventListener('touchstart', (e) => { isDrawing = true; scratch(e); }, {passive: false});
-
         window.addEventListener('mouseup', () => isDrawing = false);
         window.addEventListener('touchend', () => isDrawing = false);
-
         canvas.addEventListener('mousemove', scratch);
         canvas.addEventListener('touchmove', scratch, {passive: false});
 
-        function celebrate() {
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#fa0561', '#ffb6c1', '#ffffff']
-            });
 
-            const btn = document.querySelector('.yes-button');
-            btn.textContent = "I Love You ❤️";
-            btn.style.backgroundColor = "#4CAF50"; 
-            btn.disabled = true; // Prevent multiple clicks
-        }
-    </script>
-</body>
-</html>
+        /* --- RUNAWAY BUTTON LOGIC --- */
+        const noBtn = document.getElementById('noBtn');
+        const contentBox = document.
