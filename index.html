@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For Spoorthi ❤️</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fff5f7;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden; 
+        }
+
+        .container { 
+            text-align: center; 
+            width: 90%; 
+            max-width: 400px;
+        }
+
+        h1 {
+            color: #d6336c;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            font-weight: normal;
+        }
+
+        .scratch-container {
+            position: relative;
+            width: 300px;
+            height: 420px; /* Slightly taller for the message */
+            margin: 0 auto;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            background: white;
+        }
+
+        .base-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+            box-sizing: border-box;
+            z-index: 1; 
+        }
+
+        .base-content img { 
+            width: 140px; 
+            margin-bottom: 20px; 
+            border-radius: 10px;
+        }
+
+        .base-content h2 {
+            font-size: 1.3rem;
+            color: #333;
+            margin: 0 0 10px 0;
+        }
+
+        .base-content p {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2; 
+            cursor: pointer;
+            touch-action: none; 
+            transition: opacity 0.8s ease;
+        }
+
+        .yes-button {
+            padding: 12px 35px;
+            background: #fa0561;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(250, 5, 97, 0.3);
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .yes-button:active {
+            transform: scale(0.95);
+        }
+        
+        .reveal-animation {
+            animation: popUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popUp {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Spoorthi, please swipe...</h1>
+        
+        <div class="scratch-container">
+            <div class="base-content">
+                <img src="https://media.tenor.com/F3-c5qA5dJAAAAAj/bear-sorry.gif" alt="Sorry Bear">
+                
+                <h2>I'm really sorry.</h2>
+                
+                <p>I hate that I upset you. You mean the world to me and I never want to hurt you.</p>
+                
+                <button class="yes-button" onclick="celebrate()">I Forgive You</button>
+            </div>
+
+            <canvas id="scratch-canvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('scratch-canvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.querySelector('.scratch-container');
+
+        canvas.width = container.offsetWidth;
+        canvas.height = container.offsetHeight;
+
+        // 1. Create the Scratch Cover (Silver)
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        gradient.addColorStop(0, '#e8e8e8');
+        gradient.addColorStop(1, '#c0c0c0');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Add instructions text
+        ctx.fillStyle = "#777";
+        ctx.font = "bold 18px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Scratch to read my heart...", canvas.width/2, canvas.height/2);
+
+        let isDrawing = false;
+
+        function getPosition(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function scratch(e) {
+            if (!isDrawing) return;
+            e.preventDefault(); 
+
+            const pos = getPosition(e);
+
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, 25, 0, Math.PI * 2);
+            ctx.fill(); 
+            
+            checkScratchCompletion();
+        }
+
+        let revealed = false;
+        function checkScratchCompletion() {
+            if(revealed) return;
+            // Optimize: only check occasionally
+            if(Math.random() > 0.15) return;
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            let transparentPixels = 0;
+
+            for (let i = 3; i < pixels.length; i += 4) {
+                if (pixels[i] === 0) transparentPixels++;
+            }
+
+            const percentage = (transparentPixels / (pixels.length / 4)) * 100;
+
+            if (percentage > 40) {
+                revealed = true;
+                canvas.style.opacity = 0; 
+                setTimeout(() => {
+                    canvas.style.display = 'none'; 
+                    document.querySelector('.base-content').classList.add('reveal-animation');
+                }, 800);
+            }
+        }
+
+        canvas.addEventListener('mousedown', (e) => { isDrawing = true; scratch(e); });
+        canvas.addEventListener('touchstart', (e) => { isDrawing = true; scratch(e); }, {passive: false});
+
+        window.addEventListener('mouseup', () => isDrawing = false);
+        window.addEventListener('touchend', () => isDrawing = false);
+
+        canvas.addEventListener('mousemove', scratch);
+        canvas.addEventListener('touchmove', scratch, {passive: false});
+
+        function celebrate() {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#fa0561', '#ffb6c1', '#ffffff']
+            });
+
+            const btn = document.querySelector('.yes-button');
+            btn.textContent = "I Love You ❤️";
+            btn.style.backgroundColor = "#4CAF50"; 
+            btn.disabled = true; // Prevent multiple clicks
+        }
+    </script>
+</body>
+</html>
