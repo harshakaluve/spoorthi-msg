@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>For Spoorthi ❤️</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
     <style>
         body {
             margin: 0;
@@ -12,8 +16,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #fff5f7;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fff0f3; /* Slightly warmer pink */
+            font-family: 'Poppins', sans-serif; /* Applied new font */
             overflow: hidden; 
         }
 
@@ -27,17 +31,17 @@
             color: #d6336c;
             font-size: 1.1rem;
             margin-bottom: 20px;
-            font-weight: normal;
+            font-weight: 600;
         }
 
         .scratch-container {
             position: relative;
-            width: 300px;
-            height: 460px; /* Taller to fit buttons */
+            width: 320px;
+            height: 480px;
             margin: 0 auto;
-            border-radius: 20px;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 15px 35px rgba(214, 51, 108, 0.2);
             background: white;
         }
 
@@ -52,88 +56,95 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 30px;
             box-sizing: border-box;
             z-index: 1; 
         }
 
         .base-content img { 
-            width: 130px; 
-            margin-bottom: 15px; 
-            border-radius: 10px;
+            width: 140px; 
+            margin-bottom: 20px; 
+            border-radius: 15px;
         }
 
         .base-content h2 {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             color: #333;
             margin: 0 0 10px 0;
+            font-weight: 600;
         }
 
         .message-text {
-            color: #555;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin-bottom: 20px;
-            padding: 0 10px;
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
         }
 
         .question {
-            font-weight: bold;
+            font-weight: 600;
             color: #d6336c;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             font-size: 1.1rem;
         }
 
-        .buttons {
-            display: flex;
-            gap: 15px;
+        /* Button Container */
+        .buttons-area {
             position: relative;
             width: 100%;
+            height: 60px;
+            display: flex;
             justify-content: center;
-            height: 50px; /* Fixed height for button area */
+            gap: 20px;
         }
 
         button {
-            padding: 10px 25px;
+            padding: 12px 30px;
             border-radius: 50px;
+            font-family: 'Poppins', sans-serif;
             font-size: 1rem;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
             border: none;
+            outline: none;
             transition: transform 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .yes-button {
             background: #fa0561;
             color: white;
-            box-shadow: 0 4px 15px rgba(250, 5, 97, 0.3);
+            box-shadow: 0 4px 15px rgba(250, 5, 97, 0.4);
             z-index: 10;
         }
 
+        .yes-button:active {
+            transform: scale(0.95);
+        }
+
         .no-button {
-            background: #e0e0e0;
-            color: #555;
-            position: absolute; /* Allows it to move freely */
-            transition: all 0.2s ease; /* Smooth movement */
+            background: #f0f0f0;
+            color: #777;
+            position: absolute; /* Vital for moving around */
+            right: 40px; /* Initial position */
+            transition: all 0.15s ease-out; /* Smooth movement */
+            z-index: 10;
         }
 
         canvas {
             position: absolute;
             top: 0;
             left: 0;
-            z-index: 20; 
+            z-index: 50; 
             cursor: pointer;
             touch-action: none; 
             transition: opacity 0.8s ease;
         }
         
-        .reveal-animation {
-            animation: popUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes popUp {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+        /* Utility class to hide canvas correctly */
+        .hidden {
+            opacity: 0;
+            pointer-events: none; /* CRITICAL: Allows clicks to pass through */
         }
     </style>
 </head>
@@ -154,9 +165,9 @@
 
                 <p class="question">Will you forgive me?</p>
                 
-                <div class="buttons">
+                <div class="buttons-area" id="btnArea">
                     <button class="yes-button" onclick="celebrate()">Yes</button>
-                    <button class="no-button" id="noBtn" style="right: 40px;">No</button>
+                    <button class="no-button" id="noBtn">No</button>
                 </div>
             </div>
 
@@ -170,21 +181,25 @@
         const ctx = canvas.getContext('2d');
         const container = document.querySelector('.scratch-container');
 
+        // Set dimensions
         canvas.width = container.offsetWidth;
         canvas.height = container.offsetHeight;
 
+        // Create silver cover
         const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
         gradient.addColorStop(0, '#e8e8e8');
         gradient.addColorStop(1, '#c0c0c0');
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        ctx.fillStyle = "#777";
-        ctx.font = "bold 18px sans-serif";
+        // Text instruction
+        ctx.fillStyle = "#888";
+        ctx.font = "600 18px 'Poppins', sans-serif";
         ctx.textAlign = "center";
         ctx.fillText("Scratch to read my heart...", canvas.width/2, canvas.height/2);
 
         let isDrawing = false;
+        let revealed = false;
 
         function getPosition(e) {
             const rect = canvas.getBoundingClientRect();
@@ -194,8 +209,8 @@
         }
 
         function scratch(e) {
-            if (!isDrawing) return;
-            e.preventDefault(); 
+            if (!isDrawing || revealed) return;
+            e.preventDefault();
             const pos = getPosition(e);
             ctx.globalCompositeOperation = 'destination-out';
             ctx.beginPath();
@@ -204,26 +219,26 @@
             checkScratchCompletion();
         }
 
-        let revealed = false;
         function checkScratchCompletion() {
             if(revealed) return;
-            if(Math.random() > 0.15) return; // Throttling
+            if(Math.random() > 0.15) return; 
+
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const pixels = imageData.data;
             let transparentPixels = 0;
+            
             for (let i = 3; i < pixels.length; i += 4) {
                 if (pixels[i] === 0) transparentPixels++;
             }
+
+            // If 40% cleared, reveal everything
             if ((transparentPixels / (pixels.length / 4)) * 100 > 40) {
                 revealed = true;
-                canvas.style.opacity = 0; 
-                setTimeout(() => {
-                    canvas.style.display = 'none'; 
-                    document.querySelector('.base-content').classList.add('reveal-animation');
-                }, 800);
+                canvas.classList.add('hidden'); // This CSS class handles opacity AND pointer-events
             }
         }
 
+        // Event Listeners
         canvas.addEventListener('mousedown', (e) => { isDrawing = true; scratch(e); });
         canvas.addEventListener('touchstart', (e) => { isDrawing = true; scratch(e); }, {passive: false});
         window.addEventListener('mouseup', () => isDrawing = false);
@@ -234,4 +249,61 @@
 
         /* --- RUNAWAY BUTTON LOGIC --- */
         const noBtn = document.getElementById('noBtn');
-        const contentBox = document.
+        const btnArea = document.getElementById('btnArea');
+
+        function moveButton(e) {
+            if (!revealed) return; // Only run after scratch
+            
+            e.preventDefault(); // Stop click from registering
+
+            // Get dimensions of the container area
+            const areaRect = btnArea.getBoundingClientRect();
+            const btnRect = noBtn.getBoundingClientRect();
+
+            // Calculate safe boundaries
+            const maxX = areaRect.width - btnRect.width;
+            const maxY = areaRect.height - btnRect.height;
+
+            // Generate random positions
+            const newX = Math.random() * maxX;
+            const newY = Math.random() * maxY;
+
+            // Apply new position
+            noBtn.style.left = newX + 'px';
+            noBtn.style.top = newY + 'px';
+            noBtn.style.right = 'auto'; // Remove the initial 'right' styling
+        }
+
+        // Trigger on hover (desktop) and touch start (mobile)
+        noBtn.addEventListener('mouseover', moveButton);
+        noBtn.addEventListener('touchstart', moveButton);
+        noBtn.addEventListener('click', moveButton); // Just in case
+
+
+        /* --- CELEBRATION LOGIC --- */
+        function celebrate() {
+            if(!revealed) return; // Security check
+
+            // Confetti explosion
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#fa0561', '#ffb6c1', '#ffffff']
+            });
+
+            // Change Yes button to Success state
+            const btn = document.querySelector('.yes-button');
+            btn.textContent = "I Love You ❤️";
+            btn.style.backgroundColor = "#4CAF50"; 
+            
+            // Hide the No button
+            noBtn.style.display = 'none';
+
+            // Update text
+            document.querySelector('.question').textContent = "Yay! ❤️";
+            document.querySelector('.message-text').textContent = "Thank you for forgiving me! I love you!";
+        }
+    </script>
+</body>
+</html>
